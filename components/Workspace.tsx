@@ -24,6 +24,7 @@ import AidMapDialog from "./AidMapDialog";
 import ChatPanel from "./ChatPanel";
 import LoginScreen from "./LoginScreen";
 import SearchBar from "./SearchBar";
+import TopBar from "./TopBar";
 import UploadPanel from "./UploadPanel";
 
 // 접속 비밀번호 로그인 상태: 확인 중 / 비밀번호 입력이 필요함 / 로그인됨
@@ -252,13 +253,15 @@ export default function Workspace() {
         }}
       />
 
-      <button
-        type="button"
-        onClick={logout}
-        className="absolute right-4 top-4 z-10 text-sm text-zinc-500 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        {LOGOUT_LABEL}
-      </button>
+      <TopBar>
+        <button
+          type="button"
+          onClick={logout}
+          className="text-sm text-zinc-500 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {LOGOUT_LABEL}
+        </button>
+      </TopBar>
 
       {dragging && (
         <div className="pointer-events-none fixed inset-4 z-10 flex items-center justify-center rounded-3xl border-2 border-dashed border-blue-500 bg-blue-50/80 text-lg text-blue-700 dark:bg-blue-950/80 dark:text-blue-200">

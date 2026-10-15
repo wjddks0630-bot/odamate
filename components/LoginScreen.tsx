@@ -10,6 +10,7 @@ import {
   LOGIN_WRONG,
   NETWORK_ERROR,
 } from "@/lib/messages";
+import TopBar from "./TopBar";
 
 type Props = {
   configured: boolean; // 서버에 접속 비밀번호가 설정되어 있는지
@@ -47,42 +48,45 @@ export default function LoginScreen({ configured, notice, onLoggedIn }: Props) {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-      <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
-      {configured ? (
-        <form onSubmit={submit} className="flex w-full max-w-[584px] flex-col items-center gap-4">
-          <div className="flex h-12 w-full items-center gap-1 rounded-full border border-zinc-200 bg-background pl-5 pr-2 shadow-sm transition-shadow focus-within:shadow-md hover:shadow-md dark:border-zinc-700">
-            <label htmlFor="access-password" className="sr-only">
-              {LOGIN_PROMPT}
-            </label>
-            <input
-              id="access-password"
-              type="password"
-              value={password}
-              autoFocus
-              autoComplete="current-password"
-              maxLength={200}
-              placeholder={LOGIN_PROMPT}
-              onChange={(event) => setPassword(event.target.value)}
-              className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-zinc-400"
-            />
-            <button
-              type="submit"
-              disabled={busy || password === ""}
-              className="h-9 shrink-0 rounded-full bg-blue-600 px-5 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 dark:disabled:bg-zinc-700"
-            >
-              {LOGIN_BUTTON}
-            </button>
-          </div>
-          <p role="alert" className="min-h-5 text-sm text-red-600 dark:text-red-400">
-            {error ?? notice}
+    <div className="flex flex-1 flex-col">
+      <TopBar />
+      <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
+        <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
+        {configured ? (
+          <form onSubmit={submit} className="flex w-full max-w-[584px] flex-col items-center gap-4">
+            <div className="flex h-12 w-full items-center gap-1 rounded-full border border-zinc-200 bg-background pl-5 pr-2 shadow-sm transition-shadow focus-within:shadow-md hover:shadow-md dark:border-zinc-700">
+              <label htmlFor="access-password" className="sr-only">
+                {LOGIN_PROMPT}
+              </label>
+              <input
+                id="access-password"
+                type="password"
+                value={password}
+                autoFocus
+                autoComplete="current-password"
+                maxLength={200}
+                placeholder={LOGIN_PROMPT}
+                onChange={(event) => setPassword(event.target.value)}
+                className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-zinc-400"
+              />
+              <button
+                type="submit"
+                disabled={busy || password === ""}
+                className="h-9 shrink-0 rounded-full bg-blue-600 px-5 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 dark:disabled:bg-zinc-700"
+              >
+                {LOGIN_BUTTON}
+              </button>
+            </div>
+            <p role="alert" className="min-h-5 text-sm text-red-600 dark:text-red-400">
+              {error ?? notice}
+            </p>
+          </form>
+        ) : (
+          <p role="alert" className="max-w-md text-center text-sm text-red-600 dark:text-red-400">
+            {LOGIN_NOT_CONFIGURED}
           </p>
-        </form>
-      ) : (
-        <p role="alert" className="max-w-md text-center text-sm text-red-600 dark:text-red-400">
-          {LOGIN_NOT_CONFIGURED}
-        </p>
-      )}
+        )}
+      </div>
     </div>
   );
 }
