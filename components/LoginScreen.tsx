@@ -54,7 +54,7 @@ export default function LoginScreen({ configured, notice, onLoggedIn }: Props) {
       <TopBar />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
+          <h1 className="font-gmarket text-[3.25rem] font-bold tracking-tight sm:text-[4.125rem]">{APP_NAME}</h1>
           <p className="font-gmarket text-sm font-medium text-zinc-500">{APP_TAGLINE}</p>
         </div>
         {configured ? (
