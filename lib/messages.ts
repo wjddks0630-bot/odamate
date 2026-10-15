@@ -24,6 +24,10 @@ export const DROP_HINT = "여기에 놓으면 올라갑니다";
 export const STORAGE_NOTICE = "올린 문서는 서버에 저장되지 않으며, 새로고침하면 사라집니다";
 // 앱 이름(화면 제목·브라우저 탭 제목). 바꾸려면 여기 한 곳만 고친다.
 export const APP_NAME = "Intern Helper";
+export const REPORT_SAVE_TITLE = "파일로 저장";
+export const REPORT_SAVE_WORD = "Word (.docx)";
+export const REPORT_SAVE_TXT = "텍스트 (.txt)";
+export const REPORT_SAVE_FAILED = "파일을 만들지 못했습니다. 다시 시도해 주세요";
 export const RATE_LIMITED = "요청이 너무 많습니다. 잠시 후 다시 해 주세요";
 export const REPORT_TITLE = "보고서 작성 도우미";
 export const REPORT_SUBTITLE = "목적과 언어를 고르고 내용을 적으면 초안을 만들어 드려요";

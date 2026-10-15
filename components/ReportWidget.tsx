@@ -15,6 +15,10 @@ import {
   REPORT_NOTE,
   REPORT_OPEN_LABEL,
   REPORT_PLACEHOLDER,
+  REPORT_SAVE_FAILED,
+  REPORT_SAVE_TITLE,
+  REPORT_SAVE_TXT,
+  REPORT_SAVE_WORD,
   REPORT_STEP_CONTENT,
   REPORT_STEP_LANGUAGE,
   REPORT_STEP_PURPOSE,
@@ -31,6 +35,8 @@ import {
   type ReportLanguage,
   type ReportPurpose,
 } from "@/lib/report-options";
+
+import { buildDocx, buildTextFile, downloadBlob, reportFileName } from "@/lib/report-file";
 
 type Props = {
   onUnauthorized: () => void; // 로그인이 끊겼을 때 비밀번호 화면으로 돌아가게 한다
@@ -73,6 +79,7 @@ export default function ReportWidget({ onUnauthorized }: Props) {
   const [report, setReport] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
 
@@ -115,6 +122,20 @@ export default function ReportWidget({ onUnauthorized }: Props) {
       setError(NETWORK_ERROR);
     } finally {
       setBusy(false);
+    }
+  }
+
+  // 만들어진 보고서를 파일로 내려받는다. 파일 이름에는 목적·언어·날짜가 들어간다.
+  async function saveReport(kind: "docx" | "txt") {
+    if (report === null || purpose === null || language === null) return;
+    setSaveError(null);
+    try {
+      const purposeKo = REPORT_PURPOSES.find((item) => item.code === purpose)?.ko ?? "";
+      const languageKo = REPORT_LANGUAGES.find((item) => item.code === language)?.ko ?? "";
+      const blob = kind === "docx" ? await buildDocx(report, language) : buildTextFile(report);
+      downloadBlob(blob, reportFileName(purposeKo, languageKo, kind));
+    } catch {
+      setSaveError(REPORT_SAVE_FAILED);
     }
   }
 
@@ -246,6 +267,31 @@ export default function ReportWidget({ onUnauthorized }: Props) {
                   >
                     {REPORT_AGAIN}
                   </button>
+                </div>
+                {/* 파일로 저장: 내 컴퓨터로 내려받는다 (서버에 저장하지 않는다) */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-medium">{REPORT_SAVE_TITLE}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => saveReport("docx")}
+                      className="h-10 flex-1 rounded-xl border border-blue-600 bg-white text-sm font-medium text-blue-700 hover:bg-blue-50"
+                    >
+                      ⬇ {REPORT_SAVE_WORD}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => saveReport("txt")}
+                      className="h-10 flex-1 rounded-xl border border-blue-600 bg-white text-sm font-medium text-blue-700 hover:bg-blue-50"
+                    >
+                      ⬇ {REPORT_SAVE_TXT}
+                    </button>
+                  </div>
+                  {saveError && (
+                    <p role="alert" className="text-sm text-red-600">
+                      {saveError}
+                    </p>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-500">{REPORT_NOTE}</p>
               </>
