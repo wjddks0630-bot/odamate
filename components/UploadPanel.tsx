@@ -1,8 +1,8 @@
 "use client";
 
 // Design Ref: §1 화면 구성 ②문서 올리기 + ③올린 문서 목록
-// Plan SC: PLAN 4~12번 — 파일 선택, 검사 결과·실패 이유 표시, 성공한 문서 목록.
-import { useRef } from "react";
+// Plan SC: PLAN 4~12번 — 파일 선택(끌어다 놓기 포함), 검사 결과·실패 이유 표시, 성공한 문서 목록.
+import { useEffect, useRef, useState } from "react";
 import type { UploadedDoc } from "@/lib/types";
 
 type Props = {
@@ -13,14 +13,52 @@ type Props = {
 
 export default function UploadPanel({ docs, reading, onFiles }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  // 파일을 영역 밖에 놓아도 브라우저가 그 파일을 열어 앱(올린 문서·대화)이 사라지지 않게 막는다.
+  useEffect(() => {
+    const keepPage = (event: DragEvent) => {
+      if (event.dataTransfer?.types.includes("Files")) event.preventDefault();
+    };
+    window.addEventListener("dragover", keepPage);
+    window.addEventListener("drop", keepPage);
+    return () => {
+      window.removeEventListener("dragover", keepPage);
+      window.removeEventListener("drop", keepPage);
+    };
+  }, []);
 
   return (
     <section
       aria-labelledby="upload-title"
       className="flex flex-col gap-6 rounded-2xl border border-black/10 p-6 dark:border-white/15"
     >
-      {/* ② 문서 올리기 */}
-      <div className="flex flex-col gap-3">
+      {/* ② 문서 올리기 (파일을 끌어다 놓을 수 있는 영역) */}
+      <div
+        onDragEnter={() => !reading && setDragging(true)}
+        onDragOver={(event) => {
+          event.preventDefault();
+          if (!reading) setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          // 영역 안의 다른 요소로 옮겨 갈 때는 강조를 유지한다.
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDragging(false);
+          }
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          if (reading) return; // 읽는 중에는 새 파일을 받지 않는다 (버튼과 같은 규칙)
+          const files = Array.from(event.dataTransfer.files);
+          if (files.length > 0) onFiles(files);
+        }}
+        className={`flex flex-col gap-3 rounded-xl border-2 border-dashed p-4 transition-colors ${
+          dragging
+            ? "border-foreground bg-black/5 dark:bg-white/10"
+            : "border-black/15 dark:border-white/20"
+        }`}
+      >
         <h2 id="upload-title" className="text-xl font-semibold">
           문서 올리기
         </h2>
@@ -47,6 +85,9 @@ export default function UploadPanel({ docs, reading, onFiles }: Props) {
         >
           파일 선택
         </button>
+        <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+          {dragging ? "여기에 놓으면 올라갑니다" : "또는 파일을 이 영역으로 끌어다 놓으세요"}
+        </p>
         <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
           <li>PDF, Word(.docx), 한글(.hwpx) 파일을 올릴 수 있습니다.</li>
           <li>파일 1개는 10MB 이하, 50쪽 이하입니다.</li>
