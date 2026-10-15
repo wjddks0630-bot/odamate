@@ -13,6 +13,7 @@ import {
   type AidCountry,
   type AidRegion,
 } from "@/lib/aid-countries";
+import { AID_SUPPORT } from "@/lib/aid-projects";
 import { MAP_HEIGHT, MAP_WIDTH, type WorldMap } from "@/lib/world-map";
 
 type Props = {
@@ -31,6 +32,53 @@ const fillFor = (country: AidCountry, selected: boolean) =>
     : country.tier === "priority"
       ? "fill-blue-600 stroke-white hover:fill-blue-500"
       : "fill-blue-300 stroke-white hover:fill-blue-400";
+
+// 대한민국이 그 나라에 지원하는 사업. 조사한 자료(중점협력국)가 있을 때만 내용을 보여 준다.
+function SupportSection({ country }: { country: AidCountry }) {
+  const support = AID_SUPPORT[country.id];
+  const sub = "text-zinc-500 dark:text-zinc-400";
+  if (!support) {
+    return (
+      <section className="rounded-xl bg-zinc-50 p-4 text-sm dark:bg-zinc-900">
+        <h4 className="mb-1 font-semibold">대한민국의 지원 사업</h4>
+        <p className={sub}>이 나라의 지원 사업은 아직 정리하지 못했습니다. 아래 ODA Korea에서 확인해 주세요.</p>
+      </section>
+    );
+  }
+  const empty = support.projects.length === 0 && support.fields.length === 0;
+  return (
+    <section className="flex flex-col gap-2 rounded-xl bg-zinc-50 p-4 text-sm dark:bg-zinc-900">
+      <h4 className="font-semibold">대한민국의 지원 사업</h4>
+      {support.fields.length > 0 && (
+        <p>
+          <span className={sub}>중점 분야 </span>
+          {support.fields.join(" · ")}
+        </p>
+      )}
+      {support.projects.length > 0 && (
+        <ul className="flex list-disc flex-col gap-1.5 pl-5">
+          {support.projects.map((project) => (
+            <li key={project.title}>
+              {project.title}
+              {project.detail && <span className={sub}> — {project.detail}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {empty && <p className={sub}>확인된 지원 사업 정보가 없습니다.</p>}
+      {support.note && <p className={sub}>{support.note}</p>}
+      <p className={`text-xs ${sub}`}>
+        자료 기준: {support.asOf}.{" "}
+        {support.sources.map((url, index) => (
+          <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline dark:text-blue-300">
+            출처{support.sources.length > 1 ? index + 1 : ""} ↗
+          </a>
+        ))}{" "}
+        사업은 자주 바뀌므로 최신 내용은 ODA Korea에서 확인하세요.
+      </p>
+    </section>
+  );
+}
 
 function CountryIntro({ country }: { country: AidCountry }) {
   const link =
@@ -66,6 +114,7 @@ function CountryIntro({ country }: { country: AidCountry }) {
             : "대한민국 공적개발원조(ODA)를 함께하는 협력국입니다."}
         </dd>
       </dl>
+      <SupportSection country={country} />
       <div className="flex flex-wrap gap-2">
         <a href={wikipediaUrl(country)} target="_blank" rel="noopener noreferrer" className={link}>
           {country.name} 더 알아보기 (위키백과) ↗
