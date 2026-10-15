@@ -17,6 +17,8 @@ export const CHECKED_LABEL = "확인한 문서";
 export const COPY_LABEL = "복사";
 export const COPIED_LABEL = "복사됨";
 export const COPY_FAILED_LABEL = "복사 안 됨";
+export const SUMMARIZE_LABEL = "요약";
+export const summaryRequest = (docName: string) => `「${docName}」 문서를 요약해 주세요`;
 export const HWP_NOTICE = `${UNSUPPORTED_FORMAT}. 한글 프로그램에서 .hwpx로 다시 저장해 올려주세요`;
 export const TOO_LARGE_FILE = "파일이 10MB를 넘습니다";
 export const TOO_MANY_PAGES = `${MAX_PAGES}쪽을 넘습니다`;

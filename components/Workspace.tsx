@@ -4,7 +4,7 @@
 // Design Ref: §2.3 — 문서·메시지 상태는 이 컴포넌트가 화면 메모리에만 들고 있다 (새로고침하면 사라진다).
 import { useRef, useState } from "react";
 import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
-import { AI_ERROR, NO_DOCS_NOTICE } from "@/lib/messages";
+import { AI_ERROR, NO_DOCS_NOTICE, summaryRequest } from "@/lib/messages";
 import { processFile } from "@/lib/upload";
 import type { UploadedDoc } from "@/lib/types";
 import ChatPanel from "./ChatPanel";
@@ -33,7 +33,8 @@ export default function Workspace() {
     setMessages((current) => [...current, message]);
   }
 
-  async function handleSend(question: string) {
+  // summarize: 문서 한 개를 요약할 때 그 문서의 이름
+  async function handleSend(question: string, summarize?: string) {
     addMessage({ id: crypto.randomUUID(), role: "user", content: question });
 
     const okDocs = docsRef.current.filter((doc) => doc.status === "ok");
@@ -51,6 +52,7 @@ export default function Workspace() {
         body: JSON.stringify({
           question,
           documents: okDocs.map((doc) => ({ name: doc.name, text: doc.text })),
+          ...(summarize ? { summarize } : {}),
         }),
       });
       const data: unknown = await response.json().catch(() => null);
@@ -78,7 +80,13 @@ export default function Workspace() {
 
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <UploadPanel docs={docs} reading={reading} onFiles={handleFiles} />
+      <UploadPanel
+        docs={docs}
+        reading={reading}
+        sending={sending}
+        onFiles={handleFiles}
+        onSummarize={(doc) => handleSend(summaryRequest(doc.name), doc.name)}
+      />
       <ChatPanel
         messages={messages}
         sending={sending}

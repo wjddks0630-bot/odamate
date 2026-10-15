@@ -3,15 +3,18 @@
 // Design Ref: §1 화면 구성 ②문서 올리기 + ③올린 문서 목록
 // Plan SC: PLAN 4~12번 — 파일 선택(끌어다 놓기 포함), 검사 결과·실패 이유 표시, 성공한 문서 목록.
 import { useEffect, useRef, useState } from "react";
+import { SUMMARIZE_LABEL } from "@/lib/messages";
 import type { UploadedDoc } from "@/lib/types";
 
 type Props = {
   docs: UploadedDoc[];
   reading: boolean;
+  sending: boolean; // 답변을 기다리는 중에는 요약을 새로 요청하지 않는다
   onFiles: (files: File[]) => void;
+  onSummarize: (doc: Extract<UploadedDoc, { status: "ok" }>) => void;
 };
 
-export default function UploadPanel({ docs, reading, onFiles }: Props) {
+export default function UploadPanel({ docs, reading, sending, onFiles, onSummarize }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -110,10 +113,21 @@ export default function UploadPanel({ docs, reading, onFiles }: Props) {
             {docs.map((doc) => (
               <li key={doc.id} className="text-sm">
                 {doc.status === "ok" ? (
-                  <span>
-                    <span aria-hidden="true">✅ </span>
-                    <span className="sr-only">성공: </span>
-                    <span className="break-all">{doc.name}</span>
+                  <span className="flex items-center justify-between gap-2">
+                    <span>
+                      <span aria-hidden="true">✅ </span>
+                      <span className="sr-only">성공: </span>
+                      <span className="break-all">{doc.name}</span>
+                    </span>
+                    <button
+                      type="button"
+                      disabled={sending}
+                      onClick={() => onSummarize(doc)}
+                      aria-label={`${doc.name} ${SUMMARIZE_LABEL}`}
+                      className="shrink-0 rounded-full border border-black/15 px-3 py-1 text-xs hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/20 dark:hover:bg-white/10"
+                    >
+                      {SUMMARIZE_LABEL}
+                    </button>
                   </span>
                 ) : (
                   <span>
