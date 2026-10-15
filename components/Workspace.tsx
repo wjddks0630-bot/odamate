@@ -16,6 +16,9 @@ import {
 } from "@/lib/messages";
 import { processFile } from "@/lib/upload";
 import type { UploadedDoc } from "@/lib/types";
+import { loadWorldMap, type WorldMap } from "@/lib/world-map";
+import AidMapBanner from "./AidMapBanner";
+import AidMapDialog from "./AidMapDialog";
 import ChatPanel from "./ChatPanel";
 import LoginScreen from "./LoginScreen";
 import SearchBar from "./SearchBar";
@@ -29,6 +32,8 @@ type Auth =
 
 export default function Workspace() {
   const [auth, setAuth] = useState<Auth>({ status: "checking" });
+  const [worldMap, setWorldMap] = useState<WorldMap | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
   const [reading, setReading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -67,6 +72,16 @@ export default function Workspace() {
       alive = false;
     };
   }, []);
+
+  // 로그인한 뒤 세계지도 자료를 미리 불러 둔다 (처음 화면의 안내 카드와 팝업이 함께 쓴다).
+  useEffect(() => {
+    if (auth.status !== "ok") return;
+    loadWorldMap()
+      .then(setWorldMap)
+      .catch(() => {
+        // 지도를 불러오지 못해도 질문·답변 기능에는 영향이 없다.
+      });
+  }, [auth.status]);
 
   async function logout() {
     await fetch("/api/session", { method: "DELETE" }).catch(() => {});
@@ -235,9 +250,12 @@ export default function Workspace() {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
           <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
+          <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />
           {controls}
         </div>
       )}
+
+      <AidMapDialog open={mapOpen} worldMap={worldMap} onClose={() => setMapOpen(false)} />
 
       <footer className="border-t border-zinc-200 bg-zinc-100 px-6 py-3 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
         {STORAGE_NOTICE}
