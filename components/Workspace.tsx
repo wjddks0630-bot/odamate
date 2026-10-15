@@ -11,11 +11,13 @@ import {
   LOGIN_EXPIRED,
   LOGOUT_LABEL,
   NO_DOCS_NOTICE,
+  SHARE_EXPORT_CONFIRM,
   STORAGE_NOTICE,
   summaryRequest,
 } from "@/lib/messages";
+import { downloadBundle, isBundleFile, processBundle } from "@/lib/share";
 import { processFile } from "@/lib/upload";
-import type { UploadedDoc } from "@/lib/types";
+import type { OkDoc, UploadedDoc } from "@/lib/types";
 import { loadWorldMap, type WorldMap } from "@/lib/world-map";
 import AidMapBanner from "./AidMapBanner";
 import AidMapDialog from "./AidMapDialog";
@@ -42,6 +44,7 @@ export default function Workspace() {
   // 읽는 도중에도 최신 문서 목록을 기준으로 검사하기 위해 ref에도 보관한다.
   const docsRef = useRef<UploadedDoc[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const started = messages.length > 0;
 
@@ -96,11 +99,21 @@ export default function Workspace() {
     setReading(true);
     // 한 번에 여러 파일을 골라도 순서대로 하나씩 처리한다.
     for (const file of files) {
-      const doc = await processFile(file, docsRef.current);
-      docsRef.current = [...docsRef.current, doc];
+      // 공유 파일(.json)은 문서 여러 개가 들어 있을 수 있어 따로 처리한다.
+      const added = isBundleFile(file)
+        ? await processBundle(file, docsRef.current)
+        : [await processFile(file, docsRef.current)];
+      docsRef.current = [...docsRef.current, ...added];
       setDocs(docsRef.current);
     }
     setReading(false);
+  }
+
+  // 올린 문서를 공유 파일로 내려받는다. 내용이 글자 그대로 들어가므로 먼저 한 번 확인한다.
+  function handleExport() {
+    const okDocs = docsRef.current.filter((doc): doc is OkDoc => doc.status === "ok");
+    if (okDocs.length === 0 || !window.confirm(SHARE_EXPORT_CONFIRM)) return;
+    downloadBundle(okDocs);
   }
 
   function addMessage(message: ChatMessage) {
@@ -184,6 +197,8 @@ export default function Workspace() {
           sending={sending}
           showHints={!started}
           onSummarize={(doc) => handleSend(summaryRequest(doc.name), doc.name)}
+          onExport={handleExport}
+          onImport={() => importInputRef.current?.click()}
         />
       </div>
     </div>
@@ -218,6 +233,20 @@ export default function Workspace() {
         onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           // 같은 파일을 다시 골라도 변경으로 인식되도록 비운다.
+          event.target.value = "";
+          if (files.length > 0) handleFiles(files);
+        }}
+      />
+      {/* 공유 파일(.json)만 고르는 창 — "문서 묶음 가져오기" 버튼이 연다 */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json,application/json"
+        className="sr-only"
+        aria-label="공유 파일 선택"
+        tabIndex={-1}
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
           event.target.value = "";
           if (files.length > 0) handleFiles(files);
         }}

@@ -6,7 +6,7 @@ import { TOO_MANY_CHARS, TOO_MANY_FILES, UNREADABLE } from "./messages";
 import type { UploadedDoc } from "./types";
 import { checkFile } from "./validate";
 
-function fail(name: string, reason: string): UploadedDoc {
+export function fail(name: string, reason: string): UploadedDoc {
   return { id: crypto.randomUUID(), name, status: "error", reason };
 }
 
