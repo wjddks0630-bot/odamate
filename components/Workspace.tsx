@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
 import {
   AI_ERROR,
+  APP_NAME,
+  APP_TAGLINE,
   DROP_HINT,
   LOGIN_EXPIRED,
   LOGOUT_LABEL,
@@ -23,7 +25,9 @@ import AidMapBanner from "./AidMapBanner";
 import AidMapDialog from "./AidMapDialog";
 import ChatPanel from "./ChatPanel";
 import LoginScreen from "./LoginScreen";
+import ReportWidget from "./ReportWidget";
 import SearchBar from "./SearchBar";
+import TopBar from "./TopBar";
 import UploadPanel from "./UploadPanel";
 
 // 접속 비밀번호 로그인 상태: 확인 중 / 비밀번호 입력이 필요함 / 로그인됨
@@ -252,13 +256,15 @@ export default function Workspace() {
         }}
       />
 
-      <button
-        type="button"
-        onClick={logout}
-        className="absolute right-4 top-4 z-10 text-sm text-zinc-500 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
-      >
-        {LOGOUT_LABEL}
-      </button>
+      <TopBar>
+        <button
+          type="button"
+          onClick={logout}
+          className="text-sm text-zinc-500 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {LOGOUT_LABEL}
+        </button>
+      </TopBar>
 
       {dragging && (
         <div className="pointer-events-none fixed inset-4 z-10 flex items-center justify-center rounded-3xl border-2 border-dashed border-blue-500 bg-blue-50/80 text-lg text-blue-700 dark:bg-blue-950/80 dark:text-blue-200">
@@ -269,7 +275,7 @@ export default function Workspace() {
       {started ? (
         <>
           <header className="mx-auto w-full max-w-3xl px-6 pt-5">
-            <h1 className="text-2xl font-normal tracking-tight">인턴 도우미</h1>
+            <h1 className="font-gmarket text-2xl font-bold tracking-tight">{APP_NAME}</h1>
           </header>
           <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6">
             <ChatPanel messages={messages} sending={sending} />
@@ -278,15 +284,18 @@ export default function Workspace() {
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-          <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
+          <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
           <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />
           {controls}
         </div>
       )}
 
+      <ReportWidget onUnauthorized={() => setAuth({ status: "locked", configured: true, notice: LOGIN_EXPIRED })} />
+
       <AidMapDialog open={mapOpen} worldMap={worldMap} onClose={() => setMapOpen(false)} />
 
       <footer className="border-t border-zinc-200 bg-zinc-100 px-6 py-3 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+        <p className="font-gmarket mb-1 text-[11px] font-medium text-zinc-400">{APP_TAGLINE}</p>
         {STORAGE_NOTICE}
       </footer>
     </div>

@@ -25,3 +25,20 @@ export function isLoginBlocked(ip: string): boolean {
 export function recordLoginFailure(ip: string): void {
   recent(ip).push(Date.now());
 }
+
+// AI를 부르는 요청 횟수 제한 (같은 IP가 windowMs 동안 max번까지). 넘으면 false.
+const requestLog = globalThis as unknown as { __requestLog?: Map<string, number[]> };
+
+export function takeRequest(name: string, ip: string, max: number, windowMs: number): boolean {
+  requestLog.__requestLog ??= new Map();
+  const key = `${name}:${ip}`;
+  const now = Date.now();
+  const list = (requestLog.__requestLog.get(key) ?? []).filter((time) => now - time < windowMs);
+  if (list.length >= max) {
+    requestLog.__requestLog.set(key, list);
+    return false;
+  }
+  list.push(now);
+  requestLog.__requestLog.set(key, list);
+  return true;
+}

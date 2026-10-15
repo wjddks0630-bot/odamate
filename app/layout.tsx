@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { APP_NAME } from "@/lib/messages";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "인턴 도우미",
-  description: "올린 문서를 근거로 질문에 답해 주는 인턴 도우미 서비스",
+  title: APP_NAME,
+  description: "업무 초보자를 위한 AI 지원 서비스",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
