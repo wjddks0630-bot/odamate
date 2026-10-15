@@ -9,7 +9,7 @@ const MODEL = "gpt-4.1-mini";
 // 목적별로 들어가야 하는 구성 (보고서는 이 순서와 항목을 따른다)
 const PURPOSE_GUIDE: Record<ReportPurpose, string> = {
   official:
-    "an official government letter (공문): recipient, subject, body (background/purpose -> main content -> requested actions), contact only if given. Formal, official tone. Write it as a finished, ready-to-send document: do NOT include form boilerplate such as Attachments, Enclosures, Attachment: none, Distribution, Reference or any other line that has no real content from the user. Leave a [ ] placeholder only where information that truly must appear (e.g. recipient, date, sender name) was not given.",
+    "an official government letter (공문): recipient, body (background/purpose -> main content -> requested actions), contact only if given. Formal, official tone. Do NOT write any subject/title line (no subject line and no heading above the body, in any language); go straight from the recipient line to the body. Write it as a finished, ready-to-send document: do NOT include form boilerplate such as Attachments, Enclosures, Attachment: none, Distribution, Reference or any other line that has no real content from the user. Leave a [ ] placeholder only where information that truly must appear (e.g. recipient, date, sender name) was not given.",
   presentation:
     "material for an oral presentation: presentation title, one-line key message, key points per slide (slide number + slide title + 2-3 short bullets), one-sentence closing. Short, clear, speakable wording.",
   work: "a work report: title, overview, progress/status, issues and points to review, future plans. Concise bullet style.",
@@ -32,7 +32,7 @@ export async function writeReport(params: {
     system: `You are a report-writing assistant for Korean public-sector interns. The user describes what they want in the <request> tags (usually in Korean). Write ${PURPOSE_GUIDE[params.purpose]}
 
 Rules:
-1. OUTPUT LANGUAGE: write the ENTIRE report in ${language.name} - title, every heading, body, and placeholders. ${
+1. OUTPUT LANGUAGE: write the ENTIRE report in ${language.name} - title, every heading, every label such as the recipient line, body, and placeholders. ${
       params.language === "ko"
         ? "Use natural, polished Korean in the register that suits the report type (formal for official letters)."
         : `Translate the Korean content and the section names into ${language.name}. Do not output Korean (except proper nouns that must stay as they are).`
