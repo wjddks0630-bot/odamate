@@ -276,6 +276,7 @@ export default function Workspace() {
         <>
           <header className="mx-auto w-full max-w-3xl px-6 pt-5">
             <h1 className="font-gmarket text-2xl font-bold tracking-tight">{APP_NAME}</h1>
+            <p className="font-gmarket text-xs font-medium text-zinc-500">{APP_TAGLINE}</p>
           </header>
           <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6">
             <ChatPanel messages={messages} sending={sending} />
@@ -284,7 +285,10 @@ export default function Workspace() {
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-          <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
+            <p className="font-gmarket text-sm font-medium text-zinc-500">{APP_TAGLINE}</p>
+          </div>
           <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />
           {controls}
         </div>
@@ -295,7 +299,6 @@ export default function Workspace() {
       <AidMapDialog open={mapOpen} worldMap={worldMap} onClose={() => setMapOpen(false)} />
 
       <footer className="border-t border-zinc-200 bg-zinc-100 px-6 py-3 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-        <p className="font-gmarket mb-1 text-[11px] font-medium text-zinc-400">{APP_TAGLINE}</p>
         {STORAGE_NOTICE}
       </footer>
     </div>

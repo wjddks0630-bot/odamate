@@ -53,7 +53,10 @@ export default function LoginScreen({ configured, notice, onLoggedIn }: Props) {
     <div className="flex flex-1 flex-col">
       <TopBar />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-        <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="font-gmarket text-6xl font-bold tracking-tight sm:text-7xl">{APP_NAME}</h1>
+          <p className="font-gmarket text-sm font-medium text-zinc-500">{APP_TAGLINE}</p>
+        </div>
         {configured ? (
           <form onSubmit={submit} className="flex w-full max-w-[584px] flex-col items-center gap-4">
             <div className="flex h-12 w-full items-center gap-1 rounded-full border border-zinc-200 bg-background pl-5 pr-2 shadow-sm transition-shadow focus-within:shadow-md hover:shadow-md dark:border-zinc-700">
@@ -89,7 +92,6 @@ export default function LoginScreen({ configured, notice, onLoggedIn }: Props) {
           </p>
         )}
       </div>
-      <footer className="font-gmarket px-6 py-3 text-center text-[11px] font-medium text-zinc-400">{APP_TAGLINE}</footer>
     </div>
   );
 }
