@@ -24,6 +24,7 @@ import AidMapBanner from "./AidMapBanner";
 import AidMapDialog from "./AidMapDialog";
 import ChatPanel from "./ChatPanel";
 import LoginScreen from "./LoginScreen";
+import ReportWidget from "./ReportWidget";
 import SearchBar from "./SearchBar";
 import TopBar from "./TopBar";
 import UploadPanel from "./UploadPanel";
@@ -287,6 +288,8 @@ export default function Workspace() {
           {controls}
         </div>
       )}
+
+      <ReportWidget onUnauthorized={() => setAuth({ status: "locked", configured: true, notice: LOGIN_EXPIRED })} />
 
       <AidMapDialog open={mapOpen} worldMap={worldMap} onClose={() => setMapOpen(false)} />
 

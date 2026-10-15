@@ -24,6 +24,21 @@ export const DROP_HINT = "여기에 놓으면 올라갑니다";
 export const STORAGE_NOTICE = "올린 문서는 서버에 저장되지 않으며, 새로고침하면 사라집니다";
 // 앱 이름(화면 제목·브라우저 탭 제목). 바꾸려면 여기 한 곳만 고친다.
 export const APP_NAME = "Intern Helper";
+export const RATE_LIMITED = "요청이 너무 많습니다. 잠시 후 다시 해 주세요";
+export const REPORT_TITLE = "보고서 작성 도우미";
+export const REPORT_SUBTITLE = "목적과 언어를 고르고 내용을 적으면 초안을 만들어 드려요";
+export const REPORT_STEP_PURPOSE = "1. 어떤 보고서인가요?";
+export const REPORT_STEP_LANGUAGE = "2. 어떤 언어로 만들까요?";
+export const REPORT_STEP_CONTENT = "3. 담고 싶은 내용을 자유롭게 적어 주세요";
+export const REPORT_PLACEHOLDER =
+  "예: 다음 달 5일 오후 2시, 서울 본청에서 협력 담당자 10명을 초청해 설명회를 엽니다. 목적은 올해 성과 공유입니다.";
+export const REPORT_MAKE = "보고서 만들기";
+export const REPORT_MAKING = "보고서를 만드는 중…";
+export const REPORT_AGAIN = "다시 쓰기";
+export const REPORT_NOTE = "적지 않은 내용은 지어내지 않고 [ ] 빈칸으로 남겨요. 사실 여부는 꼭 확인해 주세요.";
+export const REPORT_OPEN_LABEL = "보고서 작성 도우미 열기";
+export const REPORT_CLOSE_LABEL = "닫기";
+export const REPORT_INVALID = "입력한 내용을 확인해 주세요";
 export const LOGIN_PROMPT = "접속 비밀번호";
 export const LOGIN_BUTTON = "입장";
 export const LOGIN_WRONG = "비밀번호가 맞지 않습니다";
