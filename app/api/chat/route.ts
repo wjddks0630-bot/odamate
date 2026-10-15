@@ -9,6 +9,7 @@ import {
   MAX_TOTAL_CHARS,
 } from "@/lib/limits";
 import { AI_ERROR } from "@/lib/messages";
+import { isAuthenticated } from "@/lib/server/auth";
 
 const requestSchema = z.strictObject({
   question: z.string().trim().min(1).max(MAX_QUESTION_CHARS),
@@ -30,6 +31,11 @@ function errorResponse(status: number, code: string, message: string) {
 }
 
 export async function POST(request: Request) {
+  // 로그인하지 않은 사람은 AI를 쓸 수 없다 (주소를 아는 누구나 비용을 쓰는 것을 막는다).
+  if (!isAuthenticated(request)) {
+    return errorResponse(401, "unauthorized", "접속이 끊겼습니다. 비밀번호를 다시 입력해 주세요");
+  }
+
   if (!request.headers.get("content-type")?.includes("application/json")) {
     return errorResponse(415, "unsupported_media_type", "요청 형식이 올바르지 않습니다");
   }

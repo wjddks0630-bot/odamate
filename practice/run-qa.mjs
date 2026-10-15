@@ -8,6 +8,30 @@ const set = JSON.parse(readFileSync(new URL("./qa-set.json", import.meta.url), "
 const NOT_FOUND = "문서에서 찾을 수 없습니다";
 const URL_API = process.env.QA_URL ?? "http://localhost:3000/api/chat";
 
+// 접속 비밀번호 로그인: .env의 ACCESS_PASSWORD(또는 같은 이름의 환경 변수)로 로그인해 쿠키를 받는다. 값은 화면에 출력하지 않는다.
+function readAccessPassword() {
+  if (process.env.ACCESS_PASSWORD) return process.env.ACCESS_PASSWORD;
+  try {
+    const line = readFileSync(new URL("../.env", import.meta.url), "utf8")
+      .split(/\r?\n/)
+      .find((l) => l.startsWith("ACCESS_PASSWORD="));
+    return line?.slice("ACCESS_PASSWORD=".length).trim().replace(/^['"]|['"]$/g, "");
+  } catch {
+    return undefined;
+  }
+}
+
+const loginRes = await fetch(new URL("/api/login", URL_API), {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ password: readAccessPassword() ?? "" }),
+});
+if (!loginRes.ok) {
+  console.error(`로그인에 실패했습니다 (HTTP ${loginRes.status}). .env의 ACCESS_PASSWORD를 확인하세요.`);
+  process.exit(1);
+}
+const cookie = (loginRes.headers.get("set-cookie") ?? "").split(";")[0];
+
 let correct = 0;
 let withSource = 0;
 let shortEnough = 0;
@@ -18,7 +42,7 @@ for (const [index, item] of set.questions.entries()) {
   const t = Date.now();
   const res = await fetch(URL_API, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookie },
     body: JSON.stringify({ question: item.q, documents: set.documents }),
   });
   const data = await res.json().catch(() => null);

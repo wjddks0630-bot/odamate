@@ -5,14 +5,30 @@
 // Design Ref: §2.3 — 문서·메시지 상태는 이 컴포넌트가 화면 메모리에만 들고 있다 (새로고침하면 사라진다).
 import { useEffect, useRef, useState } from "react";
 import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
-import { AI_ERROR, DROP_HINT, NO_DOCS_NOTICE, STORAGE_NOTICE, summaryRequest } from "@/lib/messages";
+import {
+  AI_ERROR,
+  DROP_HINT,
+  LOGIN_EXPIRED,
+  LOGOUT_LABEL,
+  NO_DOCS_NOTICE,
+  STORAGE_NOTICE,
+  summaryRequest,
+} from "@/lib/messages";
 import { processFile } from "@/lib/upload";
 import type { UploadedDoc } from "@/lib/types";
 import ChatPanel from "./ChatPanel";
+import LoginScreen from "./LoginScreen";
 import SearchBar from "./SearchBar";
 import UploadPanel from "./UploadPanel";
 
+// 접속 비밀번호 로그인 상태: 확인 중 / 비밀번호 입력이 필요함 / 로그인됨
+type Auth =
+  | { status: "checking" }
+  | { status: "locked"; configured: boolean; notice?: string }
+  | { status: "ok" };
+
 export default function Workspace() {
+  const [auth, setAuth] = useState<Auth>({ status: "checking" });
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
   const [reading, setReading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -36,6 +52,30 @@ export default function Workspace() {
       window.removeEventListener("drop", keepPage);
     };
   }, []);
+
+  // 처음 열 때 이미 로그인되어 있는지 서버에 물어본다 (쿠키가 남아 있으면 비밀번호를 다시 묻지 않는다).
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/session")
+      .then((response) => response.json())
+      .then((session: { configured: boolean; authenticated: boolean }) => {
+        if (!alive) return;
+        setAuth(session.authenticated ? { status: "ok" } : { status: "locked", configured: session.configured });
+      })
+      .catch(() => alive && setAuth({ status: "locked", configured: true }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function logout() {
+    await fetch("/api/session", { method: "DELETE" }).catch(() => {});
+    // 다른 사람이 이어서 쓰지 못하도록 올린 문서와 대화도 화면에서 지운다.
+    docsRef.current = [];
+    setDocs([]);
+    setMessages([]);
+    setAuth({ status: "locked", configured: true });
+  }
 
   async function handleFiles(files: File[]) {
     setReading(true);
@@ -76,6 +116,11 @@ export default function Workspace() {
       });
       const data: unknown = await response.json().catch(() => null);
 
+      if (response.status === 401) {
+        // 로그인이 끊겼다: 비밀번호 입력 화면으로 돌아간다 (올린 문서와 대화는 그대로 남는다).
+        setAuth({ status: "locked", configured: true, notice: LOGIN_EXPIRED });
+        return;
+      }
       if (!response.ok) {
         const message = (data as { error?: { message?: string } } | null)?.error?.message;
         addMessage({ id: crypto.randomUUID(), role: "error", content: message ?? AI_ERROR });
@@ -95,6 +140,17 @@ export default function Workspace() {
     } finally {
       setSending(false);
     }
+  }
+
+  if (auth.status === "checking") return <div className="flex-1" />;
+  if (auth.status === "locked") {
+    return (
+      <LoginScreen
+        configured={auth.configured}
+        notice={auth.notice}
+        onLoggedIn={() => setAuth({ status: "ok" })}
+      />
+    );
   }
 
   const controls = (
@@ -151,6 +207,14 @@ export default function Workspace() {
           if (files.length > 0) handleFiles(files);
         }}
       />
+
+      <button
+        type="button"
+        onClick={logout}
+        className="absolute right-4 top-4 z-10 text-sm text-zinc-500 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+      >
+        {LOGOUT_LABEL}
+      </button>
 
       {dragging && (
         <div className="pointer-events-none fixed inset-4 z-10 flex items-center justify-center rounded-3xl border-2 border-dashed border-blue-500 bg-blue-50/80 text-lg text-blue-700 dark:bg-blue-950/80 dark:text-blue-200">
