@@ -42,12 +42,23 @@ function buildPrompt(question: string, documents: ChatDocument[]): string {
   return `${docs}\n\n질문: ${question}`;
 }
 
-export async function answerQuestion(question: string, documents: ChatDocument[]): Promise<ChatApiResponse> {
+// 문서 한 개를 요약하는 요청일 때 규칙에 덧붙이는 지시
+const SUMMARY_INSTRUCTION = `
+이번 요청은 <document> 하나를 요약하는 것입니다. 문서의 가장 중요한 내용을 5문장 이내로 요약합니다. 문서에 없는 해석이나 조언을 덧붙이지 않습니다. 요약을 썼다면 found는 true, sources에는 그 문서의 이름을 적습니다.`;
+
+// summarize: 요약할 문서 이름. 있으면 그 문서만 AI에게 보내 요약한다.
+export async function answerQuestion(
+  question: string,
+  allDocuments: ChatDocument[],
+  summarize?: string,
+): Promise<ChatApiResponse> {
+  const documents = summarize ? allDocuments.filter((doc) => doc.name === summarize) : allDocuments;
+
   // 이전 대화는 보내지 않고 현재 질문만 보낸다 (요청 크기와 비용을 줄이기 위함).
   const { output } = await generateText({
     model: openai(MODEL),
     temperature: 0,
-    system: SYSTEM_PROMPT,
+    system: summarize ? SYSTEM_PROMPT + SUMMARY_INSTRUCTION : SYSTEM_PROMPT,
     prompt: buildPrompt(question, documents),
     output: Output.object({ schema: answerSchema }),
   });
