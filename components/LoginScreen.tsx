@@ -3,6 +3,7 @@
 // 접속 비밀번호 입력 화면 — 처음 화면과 같은 모양(가운데 제목, 둥근 입력창).
 import { useState, type FormEvent } from "react";
 import {
+  APP_NAME,
   LOGIN_BUTTON,
   LOGIN_NOT_CONFIGURED,
   LOGIN_PROMPT,
@@ -51,7 +52,7 @@ export default function LoginScreen({ configured, notice, onLoggedIn }: Props) {
     <div className="flex flex-1 flex-col">
       <TopBar />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-        <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
+        <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">{APP_NAME}</h1>
         {configured ? (
           <form onSubmit={submit} className="flex w-full max-w-[584px] flex-col items-center gap-4">
             <div className="flex h-12 w-full items-center gap-1 rounded-full border border-zinc-200 bg-background pl-5 pr-2 shadow-sm transition-shadow focus-within:shadow-md hover:shadow-md dark:border-zinc-700">

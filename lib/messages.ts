@@ -22,6 +22,8 @@ export const ASK_LABEL = "질문하기";
 export const PICK_LABEL = "파일 선택";
 export const DROP_HINT = "여기에 놓으면 올라갑니다";
 export const STORAGE_NOTICE = "올린 문서는 서버에 저장되지 않으며, 새로고침하면 사라집니다";
+// 앱 이름(화면 제목·브라우저 탭 제목). 바꾸려면 여기 한 곳만 고친다.
+export const APP_NAME = "Intern Helper";
 export const LOGIN_PROMPT = "접속 비밀번호";
 export const LOGIN_BUTTON = "입장";
 export const LOGIN_WRONG = "비밀번호가 맞지 않습니다";

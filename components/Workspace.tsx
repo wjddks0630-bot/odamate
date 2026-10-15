@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
 import {
   AI_ERROR,
+  APP_NAME,
   DROP_HINT,
   LOGIN_EXPIRED,
   LOGOUT_LABEL,
@@ -272,7 +273,7 @@ export default function Workspace() {
       {started ? (
         <>
           <header className="mx-auto w-full max-w-3xl px-6 pt-5">
-            <h1 className="text-2xl font-normal tracking-tight">인턴 도우미</h1>
+            <h1 className="text-2xl font-normal tracking-tight">{APP_NAME}</h1>
           </header>
           <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6">
             <ChatPanel messages={messages} sending={sending} />
@@ -281,7 +282,7 @@ export default function Workspace() {
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
-          <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">인턴 도우미</h1>
+          <h1 className="text-6xl font-normal tracking-tight sm:text-7xl">{APP_NAME}</h1>
           <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />
           {controls}
         </div>
