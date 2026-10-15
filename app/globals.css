@@ -10,7 +10,22 @@
   color-scheme: light; /* 입력창·선택 목록·스크롤바 같은 기본 부품도 밝게 */
 }
 
+/* G마켓 산스 (지마켓 무료 글꼴, 눈누 CDN) */
+@font-face {
+  font-family: "GmarketSans";
+  font-weight: 500;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff") format("woff");
+}
+@font-face {
+  font-family: "GmarketSans";
+  font-weight: 700;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff") format("woff");
+}
+
 @theme inline {
+  --font-gmarket: "GmarketSans", var(--font-geist-sans), sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
