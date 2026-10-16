@@ -4,7 +4,8 @@
 // 대화가 아래로 쌓이며 질문창은 화면 아래에 붙는다. 문서는 질문창 아래에 칩으로 보인다.
 // Design Ref: §2.3 — 문서·메시지 상태는 이 컴포넌트가 화면 메모리에만 들고 있다 (새로고침하면 사라진다).
 import { useEffect, useRef, useState } from "react";
-import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
+import type { ChatApiResponse, ChatHistoryItem, ChatMessage } from "@/lib/chat-types";
+import { MAX_HISTORY_MESSAGE_CHARS, MAX_HISTORY_MESSAGES } from "@/lib/limits";
 import {
   AI_ERROR,
   APP_NAME,
@@ -12,7 +13,6 @@ import {
   DROP_HINT,
   LOGIN_EXPIRED,
   LOGOUT_LABEL,
-  NO_DOCS_NOTICE,
   SHARE_EXPORT_CONFIRM,
   STORAGE_NOTICE,
   summaryRequest,
@@ -52,6 +52,8 @@ export default function Workspace() {
   const docsRef = useRef<UploadedDoc[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  // 처음 화면으로 돌아갈 때마다 1씩 늘린다. 그 전에 보낸 질문의 답이 늦게 와도 새 화면에 붙이지 않기 위함이다.
+  const chatRoundRef = useRef(0);
 
   const started = messages.length > 0;
 
@@ -102,6 +104,15 @@ export default function Workspace() {
     setAuth({ status: "locked", configured: true });
   }
 
+  // 로고나 ODAmate 제목을 누르면 대화를 비워 처음 화면으로 돌아간다 (올린 문서는 그대로 둔다).
+  function goHome() {
+    chatRoundRef.current += 1;
+    setMessages([]);
+    setMapOpen(false);
+    setEdcfOpen(false);
+    window.scrollTo({ top: 0 });
+  }
+
   async function handleFiles(files: File[]) {
     setReading(true);
     // 한 번에 여러 파일을 골라도 순서대로 하나씩 처리한다.
@@ -114,6 +125,12 @@ export default function Workspace() {
       setDocs(docsRef.current);
     }
     setReading(false);
+  }
+
+  // 올린 문서를 목록에서 뺀다. 이후 질문·요약·공유에는 남은 문서만 쓰인다.
+  function handleRemove(id: string) {
+    docsRef.current = docsRef.current.filter((doc) => doc.id !== id);
+    setDocs(docsRef.current);
   }
 
   // 올린 문서를 공유 파일로 내려받는다. 내용이 글자 그대로 들어가므로 먼저 한 번 확인한다.
@@ -129,14 +146,26 @@ export default function Workspace() {
 
   // summarize: 문서 한 개를 요약할 때 그 문서의 이름
   async function handleSend(question: string, summarize?: string) {
+    const okDocs = docsRef.current.filter((doc) => doc.status === "ok");
+    // 이어지는 질문(예: 요약을 본 뒤 묻는 질문)을 이해하도록 최근 대화를 함께 보낸다. 요약 요청에는 보내지 않는다.
+    const history: ChatHistoryItem[] =
+      !summarize
+        ? messages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .slice(-MAX_HISTORY_MESSAGES)
+            .map((m) => ({
+              role: m.role as ChatHistoryItem["role"],
+              content: m.content.slice(0, MAX_HISTORY_MESSAGE_CHARS),
+            }))
+        : [];
+
     addMessage({ id: crypto.randomUUID(), role: "user", content: question });
 
-    const okDocs = docsRef.current.filter((doc) => doc.status === "ok");
-    // 문서가 없으면 서버를 부르지 않고 안내만 한다.
-    if (okDocs.length === 0) {
-      addMessage({ id: crypto.randomUUID(), role: "notice", content: NO_DOCS_NOTICE });
-      return;
-    }
+    // 답을 기다리는 사이 처음 화면으로 돌아갔다면, 늦게 온 답은 버린다.
+    const round = chatRoundRef.current;
+    const reply = (message: ChatMessage) => {
+      if (chatRoundRef.current === round) addMessage(message);
+    };
 
     setSending(true);
     try {
@@ -147,6 +176,7 @@ export default function Workspace() {
           question,
           documents: okDocs.map((doc) => ({ name: doc.name, text: doc.text })),
           ...(summarize ? { summarize } : {}),
+          ...(history.length > 0 ? { history } : {}),
         }),
       });
       const data: unknown = await response.json().catch(() => null);
@@ -158,12 +188,12 @@ export default function Workspace() {
       }
       if (!response.ok) {
         const message = (data as { error?: { message?: string } } | null)?.error?.message;
-        addMessage({ id: crypto.randomUUID(), role: "error", content: message ?? AI_ERROR });
+        reply({ id: crypto.randomUUID(), role: "error", content: message ?? AI_ERROR });
         return;
       }
 
       const result = data as ChatApiResponse;
-      addMessage({
+      reply({
         id: crypto.randomUUID(),
         role: "assistant",
         content: result.answer,
@@ -171,7 +201,7 @@ export default function Workspace() {
         sources: result.sources,
       });
     } catch {
-      addMessage({ id: crypto.randomUUID(), role: "error", content: AI_ERROR });
+      reply({ id: crypto.randomUUID(), role: "error", content: AI_ERROR });
     } finally {
       setSending(false);
     }
@@ -204,6 +234,7 @@ export default function Workspace() {
           sending={sending}
           showHints={!started}
           onSummarize={(doc) => handleSend(summaryRequest(doc.name), doc.name)}
+          onRemove={handleRemove}
           onExport={handleExport}
           onImport={() => importInputRef.current?.click()}
         />
@@ -259,7 +290,7 @@ export default function Workspace() {
         }}
       />
 
-      <TopBar>
+      <TopBar onHome={goHome}>
         <button
           type="button"
           onClick={logout}
@@ -278,7 +309,11 @@ export default function Workspace() {
       {started ? (
         <>
           <header className="mx-auto w-full max-w-3xl px-6 pt-5">
-            <h1 className="font-gmarket text-2xl font-bold tracking-tight">{APP_NAME}</h1>
+            <h1 className="font-gmarket text-2xl font-bold tracking-tight">
+              <button type="button" onClick={goHome} className="cursor-pointer">
+                {APP_NAME}
+              </button>
+            </h1>
             <p className="font-gmarket text-xs font-medium text-zinc-500">{APP_TAGLINE}</p>
           </header>
           <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6">
@@ -289,7 +324,11 @@ export default function Workspace() {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
           <div className="flex flex-col items-center gap-2">
-            <h1 className="font-gmarket text-[3.25rem] font-bold tracking-tight sm:text-[4.125rem]">{APP_NAME}</h1>
+            <h1 className="font-gmarket text-[3.25rem] font-bold tracking-tight sm:text-[4.125rem]">
+              <button type="button" onClick={goHome} className="cursor-pointer">
+                {APP_NAME}
+              </button>
+            </h1>
             <p className="font-gmarket text-sm font-medium text-zinc-500">{APP_TAGLINE}</p>
           </div>
           <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />

@@ -10,6 +10,10 @@ export const MAX_TOTAL_CHARS = 400_000; // 문서 전체 글자 수 합계 (잠�
 export const MAX_QUESTION_CHARS = 1_000; // 질문 길이 (잠정값)
 export const MAX_DOC_NAME_CHARS = 200; // 문서 이름 길이 (잠정값)
 
+// 문서 없이 묻는 일반 질문에서 함께 보내는 이전 대화 (비용을 줄이기 위해 최근 것만, 잠정값)
+export const MAX_HISTORY_MESSAGES = 10; // 최근 메시지 10개
+export const MAX_HISTORY_MESSAGE_CHARS = 4_000; // 메시지 1개 길이
+
 // docx·hwpx는 쪽 수를 정확히 알 수 없어 글자 수로 근사한다 (한 쪽 약 1,500자, 잠정값).
 export const CHARS_PER_PAGE = 1_500;
 
