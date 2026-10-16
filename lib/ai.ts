@@ -3,7 +3,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import type { ChatApiResponse } from "./chat-types";
+import type { ChatApiResponse, ChatHistoryItem } from "./chat-types";
 import { NOT_FOUND } from "./messages";
 
 // OpenAI 키는 .env의 OPENAI_API_KEY에서 서버가 읽는다 (브라우저에는 나가지 않는다).
@@ -77,4 +77,25 @@ export async function answerQuestion(
   // 링크는 화면에 그리지 않는다 (인젝션으로 만든 외부 주소로 유도되는 것을 막기 위함).
   const answer = output.answer.replace(/https?:\/\/\S+/g, "[링크 제거]").trim();
   return { answer, sourceKind: "evidence", sources };
+}
+
+// 문서를 올리지 않았을 때: ChatGPT처럼 어떤 질문이든 AI의 일반 지식으로 답한다.
+const GENERAL_SYSTEM_PROMPT = `당신은 한국 공공기관(개발협력 분야)에서 일하는 인턴을 돕는 업무 도우미 "ODAmate"입니다.
+규칙:
+1. 업무 질문뿐 아니라 일상적인 질문까지 무엇이든 친절하고 정확하게 한국어로 답합니다. 사용자가 다른 언어로 물으면 그 언어로 답합니다.
+2. 확실하지 않거나 최신 정보가 필요한 내용(통계, 법령, 인사, 최근 사건 등)은 추측해서 단정하지 말고, 확인이 필요하다고 분명히 밝힙니다.
+3. 핵심부터 간결하게 답하고, 필요할 때만 "1." 또는 "-" 목록으로 정리합니다. 마크다운 기호(#, **, 표, 백틱)는 쓰지 않습니다.
+4. 링크는 쓰지 않습니다. 출처가 필요하면 기관·자료 이름만 적습니다.`;
+
+export async function answerGeneral(question: string, history: ChatHistoryItem[]): Promise<ChatApiResponse> {
+  const { text } = await generateText({
+    model: openai(MODEL),
+    temperature: 0.5,
+    system: GENERAL_SYSTEM_PROMPT,
+    messages: [...history, { role: "user", content: question }],
+  });
+
+  const answer = text.replace(/https?:\/\/\S+/g, "[링크 제거]").trim();
+  if (answer === "") throw new AnswerRuleError("빈 답변");
+  return { answer, sourceKind: "general", sources: [] };
 }

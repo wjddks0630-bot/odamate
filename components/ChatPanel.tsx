@@ -10,6 +10,7 @@ import {
   COPIED_LABEL,
   COPY_FAILED_LABEL,
   COPY_LABEL,
+  GENERAL_LABEL,
   SOURCE_LABEL,
   THINKING,
 } from "@/lib/messages";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 function sourceLine(message: Extract<ChatMessage, { role: "assistant" }>): string {
+  if (message.sourceKind === "general") return GENERAL_LABEL;
   const label = message.sourceKind === "checked" ? CHECKED_LABEL : SOURCE_LABEL;
   return `${label}: ${message.sources.join(", ")}`;
 }

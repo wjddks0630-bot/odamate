@@ -4,7 +4,8 @@
 // 대화가 아래로 쌓이며 질문창은 화면 아래에 붙는다. 문서는 질문창 아래에 칩으로 보인다.
 // Design Ref: §2.3 — 문서·메시지 상태는 이 컴포넌트가 화면 메모리에만 들고 있다 (새로고침하면 사라진다).
 import { useEffect, useRef, useState } from "react";
-import type { ChatApiResponse, ChatMessage } from "@/lib/chat-types";
+import type { ChatApiResponse, ChatHistoryItem, ChatMessage } from "@/lib/chat-types";
+import { MAX_HISTORY_MESSAGE_CHARS, MAX_HISTORY_MESSAGES } from "@/lib/limits";
 import {
   AI_ERROR,
   APP_NAME,
@@ -12,7 +13,6 @@ import {
   DROP_HINT,
   LOGIN_EXPIRED,
   LOGOUT_LABEL,
-  NO_DOCS_NOTICE,
   SHARE_EXPORT_CONFIRM,
   STORAGE_NOTICE,
   summaryRequest,
@@ -146,14 +146,20 @@ export default function Workspace() {
 
   // summarize: 문서 한 개를 요약할 때 그 문서의 이름
   async function handleSend(question: string, summarize?: string) {
-    addMessage({ id: crypto.randomUUID(), role: "user", content: question });
-
     const okDocs = docsRef.current.filter((doc) => doc.status === "ok");
-    // 문서가 없으면 서버를 부르지 않고 안내만 한다.
-    if (okDocs.length === 0) {
-      addMessage({ id: crypto.randomUUID(), role: "notice", content: NO_DOCS_NOTICE });
-      return;
-    }
+    // 문서가 없으면 일반 질문으로 보내고, 이어지는 질문을 이해하도록 최근 대화를 함께 보낸다.
+    const history: ChatHistoryItem[] =
+      okDocs.length === 0
+        ? messages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .slice(-MAX_HISTORY_MESSAGES)
+            .map((m) => ({
+              role: m.role as ChatHistoryItem["role"],
+              content: m.content.slice(0, MAX_HISTORY_MESSAGE_CHARS),
+            }))
+        : [];
+
+    addMessage({ id: crypto.randomUUID(), role: "user", content: question });
 
     // 답을 기다리는 사이 처음 화면으로 돌아갔다면, 늦게 온 답은 버린다.
     const round = chatRoundRef.current;
@@ -170,6 +176,7 @@ export default function Workspace() {
           question,
           documents: okDocs.map((doc) => ({ name: doc.name, text: doc.text })),
           ...(summarize ? { summarize } : {}),
+          ...(history.length > 0 ? { history } : {}),
         }),
       });
       const data: unknown = await response.json().catch(() => null);

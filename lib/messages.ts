@@ -14,6 +14,7 @@ export const THINKING = "답변을 만드는 중…";
 export const CHAT_HINT = "궁금한 내용을 질문해 보세요";
 export const SOURCE_LABEL = "출처";
 export const CHECKED_LABEL = "확인한 문서";
+export const GENERAL_LABEL = "일반 답변: 올린 문서가 아닌 AI의 일반 지식으로 답했습니다. 사실 여부는 꼭 확인해 주세요";
 export const COPY_LABEL = "복사";
 export const COPIED_LABEL = "복사됨";
 export const COPY_FAILED_LABEL = "복사 안 됨";

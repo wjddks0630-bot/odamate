@@ -1,10 +1,12 @@
 // Design Ref: §2.4 POST /api/chat — 질문과 문서 글자를 받아 답변·출처를 돌려준다.
 // Design Ref: §2.2 ③ 서버가 다시 검사한다 (브라우저 검사는 우회할 수 있기 때문).
 import { z } from "zod";
-import { answerQuestion } from "@/lib/ai";
+import { answerGeneral, answerQuestion } from "@/lib/ai";
 import {
   MAX_DOC_NAME_CHARS,
   MAX_FILES,
+  MAX_HISTORY_MESSAGE_CHARS,
+  MAX_HISTORY_MESSAGES,
   MAX_QUESTION_CHARS,
   MAX_TOTAL_CHARS,
 } from "@/lib/limits";
@@ -19,10 +21,19 @@ const requestSchema = z.strictObject({
         name: z.string().min(1).max(MAX_DOC_NAME_CHARS),
         text: z.string().min(1).max(MAX_TOTAL_CHARS),
       }),
-    )
-    .min(1),
+    ),
   // 문서 한 개를 요약할 때 그 문서의 이름 (올린 문서 중에 있어야 한다)
   summarize: z.string().min(1).max(MAX_DOC_NAME_CHARS).optional(),
+  // 문서가 없을 때(일반 질문)만 쓰는 이전 대화
+  history: z
+    .array(
+      z.strictObject({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().min(1).max(MAX_HISTORY_MESSAGE_CHARS),
+      }),
+    )
+    .max(MAX_HISTORY_MESSAGES)
+    .optional(),
 });
 
 // 오류 응답은 고정 문구와 코드만 돌려준다 (내부 오류 내용·문서 글자는 담지 않는다).
@@ -52,7 +63,21 @@ export async function POST(request: Request) {
     return errorResponse(400, "invalid_request", "질문과 문서를 확인해 주세요");
   }
 
-  const { question, documents, summarize } = parsed.data;
+  const { question, documents, summarize, history } = parsed.data;
+
+  // 문서 없이 물으면 일반 지식으로 답한다 (문서 기반 답변 규칙은 문서가 있을 때만 적용).
+  if (documents.length === 0) {
+    if (summarize !== undefined) {
+      return errorResponse(400, "invalid_request", "요약할 문서를 확인해 주세요");
+    }
+    try {
+      return Response.json(await answerGeneral(question, history ?? []));
+    } catch (error) {
+      console.error("[chat] 일반 답변 생성 실패:", error instanceof Error ? error.name : "unknown");
+      return errorResponse(502, "ai_failed", AI_ERROR);
+    }
+  }
+
   if (summarize !== undefined && !documents.some((doc) => doc.name === summarize)) {
     return errorResponse(400, "invalid_request", "요약할 문서를 확인해 주세요");
   }
