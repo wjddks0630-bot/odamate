@@ -52,6 +52,8 @@ export default function Workspace() {
   const docsRef = useRef<UploadedDoc[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  // 처음 화면으로 돌아갈 때마다 1씩 늘린다. 그 전에 보낸 질문의 답이 늦게 와도 새 화면에 붙이지 않기 위함이다.
+  const chatRoundRef = useRef(0);
 
   const started = messages.length > 0;
 
@@ -104,6 +106,7 @@ export default function Workspace() {
 
   // 로고나 ODAmate 제목을 누르면 대화를 비워 처음 화면으로 돌아간다 (올린 문서는 그대로 둔다).
   function goHome() {
+    chatRoundRef.current += 1;
     setMessages([]);
     setMapOpen(false);
     setEdcfOpen(false);
@@ -152,6 +155,12 @@ export default function Workspace() {
       return;
     }
 
+    // 답을 기다리는 사이 처음 화면으로 돌아갔다면, 늦게 온 답은 버린다.
+    const round = chatRoundRef.current;
+    const reply = (message: ChatMessage) => {
+      if (chatRoundRef.current === round) addMessage(message);
+    };
+
     setSending(true);
     try {
       const response = await fetch("/api/chat", {
@@ -172,12 +181,12 @@ export default function Workspace() {
       }
       if (!response.ok) {
         const message = (data as { error?: { message?: string } } | null)?.error?.message;
-        addMessage({ id: crypto.randomUUID(), role: "error", content: message ?? AI_ERROR });
+        reply({ id: crypto.randomUUID(), role: "error", content: message ?? AI_ERROR });
         return;
       }
 
       const result = data as ChatApiResponse;
-      addMessage({
+      reply({
         id: crypto.randomUUID(),
         role: "assistant",
         content: result.answer,
@@ -185,7 +194,7 @@ export default function Workspace() {
         sources: result.sources,
       });
     } catch {
-      addMessage({ id: crypto.randomUUID(), role: "error", content: AI_ERROR });
+      reply({ id: crypto.randomUUID(), role: "error", content: AI_ERROR });
     } finally {
       setSending(false);
     }
