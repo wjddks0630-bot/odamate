@@ -24,7 +24,7 @@ const requestSchema = z.strictObject({
     ),
   // 문서 한 개를 요약할 때 그 문서의 이름 (올린 문서 중에 있어야 한다)
   summarize: z.string().min(1).max(MAX_DOC_NAME_CHARS).optional(),
-  // 문서가 없을 때(일반 질문)만 쓰는 이전 대화
+  // 이어지는 질문을 이해하기 위한 이전 대화 (요약 요청에는 쓰지 않는다)
   history: z
     .array(
       z.strictObject({
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    return Response.json(await answerQuestion(question, documents, summarize));
+    return Response.json(await answerQuestion(question, documents, summarize, history ?? []));
   } catch (error) {
     // 오류 객체 전체에는 문서 글자가 담길 수 있어, 종류만 기록한다.
     console.error("[chat] 답변 생성 실패:", error instanceof Error ? error.name : "unknown");

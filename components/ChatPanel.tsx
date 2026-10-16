@@ -11,6 +11,7 @@ import {
   COPY_FAILED_LABEL,
   COPY_LABEL,
   GENERAL_LABEL,
+  MIXED_NOTE,
   SOURCE_LABEL,
   THINKING,
 } from "@/lib/messages";
@@ -23,7 +24,8 @@ type Props = {
 function sourceLine(message: Extract<ChatMessage, { role: "assistant" }>): string {
   if (message.sourceKind === "general") return GENERAL_LABEL;
   const label = message.sourceKind === "checked" ? CHECKED_LABEL : SOURCE_LABEL;
-  return `${label}: ${message.sources.join(", ")}`;
+  const line = `${label}: ${message.sources.join(", ")}`;
+  return message.sourceKind === "mixed" ? `${line} · ${MIXED_NOTE}` : line;
 }
 
 function CopyButton({ text }: { text: string }) {

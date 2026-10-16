@@ -147,9 +147,9 @@ export default function Workspace() {
   // summarize: 문서 한 개를 요약할 때 그 문서의 이름
   async function handleSend(question: string, summarize?: string) {
     const okDocs = docsRef.current.filter((doc) => doc.status === "ok");
-    // 문서가 없으면 일반 질문으로 보내고, 이어지는 질문을 이해하도록 최근 대화를 함께 보낸다.
+    // 이어지는 질문(예: 요약을 본 뒤 묻는 질문)을 이해하도록 최근 대화를 함께 보낸다. 요약 요청에는 보내지 않는다.
     const history: ChatHistoryItem[] =
-      okDocs.length === 0
+      !summarize
         ? messages
             .filter((m) => m.role === "user" || m.role === "assistant")
             .slice(-MAX_HISTORY_MESSAGES)
