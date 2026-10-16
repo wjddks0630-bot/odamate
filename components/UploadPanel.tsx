@@ -66,22 +66,25 @@ export default function UploadPanel({
               >
                 <span aria-hidden="true">✅</span>
                 <span className="sr-only">성공: </span>
-                <span className="truncate">{doc.name}</span>
+                {/* 파일 이름이 길면 이름만 줄여 보이고, 요약·x 버튼은 항상 함께 보이게 한다 */}
+                <span className="min-w-0 truncate">{doc.name}</span>
                 {doc.imported && (
                   <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
                     {IMPORTED_LABEL}
                   </span>
                 )}
-                <button
-                  type="button"
-                  disabled={sending}
-                  onClick={() => onSummarize(doc)}
-                  aria-label={`${doc.name} ${SUMMARIZE_LABEL}`}
-                  className="shrink-0 rounded-full bg-background px-3 py-1 text-xs text-blue-700 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-300"
-                >
-                  {SUMMARIZE_LABEL}
-                </button>
-                {removeButton(doc)}
+                <span className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={sending}
+                    onClick={() => onSummarize(doc)}
+                    aria-label={`${doc.name} ${SUMMARIZE_LABEL}`}
+                    className="shrink-0 rounded-full bg-background px-3 py-1 text-xs text-blue-700 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-300"
+                  >
+                    {SUMMARIZE_LABEL}
+                  </button>
+                  {removeButton(doc)}
+                </span>
               </li>
             ) : (
               <li
