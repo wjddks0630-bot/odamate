@@ -102,6 +102,14 @@ export default function Workspace() {
     setAuth({ status: "locked", configured: true });
   }
 
+  // 로고나 ODAmate 제목을 누르면 대화를 비워 처음 화면으로 돌아간다 (올린 문서는 그대로 둔다).
+  function goHome() {
+    setMessages([]);
+    setMapOpen(false);
+    setEdcfOpen(false);
+    window.scrollTo({ top: 0 });
+  }
+
   async function handleFiles(files: File[]) {
     setReading(true);
     // 한 번에 여러 파일을 골라도 순서대로 하나씩 처리한다.
@@ -259,7 +267,7 @@ export default function Workspace() {
         }}
       />
 
-      <TopBar>
+      <TopBar onHome={goHome}>
         <button
           type="button"
           onClick={logout}
@@ -278,7 +286,11 @@ export default function Workspace() {
       {started ? (
         <>
           <header className="mx-auto w-full max-w-3xl px-6 pt-5">
-            <h1 className="font-gmarket text-2xl font-bold tracking-tight">{APP_NAME}</h1>
+            <h1 className="font-gmarket text-2xl font-bold tracking-tight">
+              <button type="button" onClick={goHome} className="cursor-pointer">
+                {APP_NAME}
+              </button>
+            </h1>
             <p className="font-gmarket text-xs font-medium text-zinc-500">{APP_TAGLINE}</p>
           </header>
           <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6">
@@ -289,7 +301,11 @@ export default function Workspace() {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
           <div className="flex flex-col items-center gap-2">
-            <h1 className="font-gmarket text-[3.25rem] font-bold tracking-tight sm:text-[4.125rem]">{APP_NAME}</h1>
+            <h1 className="font-gmarket text-[3.25rem] font-bold tracking-tight sm:text-[4.125rem]">
+              <button type="button" onClick={goHome} className="cursor-pointer">
+                {APP_NAME}
+              </button>
+            </h1>
             <p className="font-gmarket text-sm font-medium text-zinc-500">{APP_TAGLINE}</p>
           </div>
           <AidMapBanner worldMap={worldMap} onOpen={() => setMapOpen(true)} />
