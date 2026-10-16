@@ -4,6 +4,7 @@
 // Plan SC: PLAN 4~12번 — 검사 결과·실패 이유 표시, 성공한 문서 목록, 문서별 요약 버튼.
 import {
   IMPORTED_LABEL,
+  REMOVE_LABEL,
   SHARE_EXPORT_LABEL,
   SHARE_HINT,
   SHARE_IMPORT_LABEL,
@@ -17,6 +18,7 @@ type Props = {
   sending: boolean; // 답변을 기다리는 중에는 요약을 새로 요청하지 않는다
   showHints: boolean; // 처음 화면에서만 제한 안내를 보여준다
   onSummarize: (doc: OkDoc) => void;
+  onRemove: (id: string) => void; // 올린 문서를 목록에서 뺀다
   onExport: () => void; // 올린 문서를 공유 파일로 내려받는다
   onImport: () => void; // 공유 파일을 고르는 창을 연다
 };
@@ -24,8 +26,29 @@ type Props = {
 const shareButton =
   "rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800";
 
-export default function UploadPanel({ docs, reading, sending, showHints, onSummarize, onExport, onImport }: Props) {
+export default function UploadPanel({
+  docs,
+  reading,
+  sending,
+  showHints,
+  onSummarize,
+  onRemove,
+  onExport,
+  onImport,
+}: Props) {
   const hasOkDoc = docs.some((doc) => doc.status === "ok");
+
+  const removeButton = (doc: UploadedDoc) => (
+    <button
+      type="button"
+      onClick={() => onRemove(doc.id)}
+      aria-label={`${doc.name} ${REMOVE_LABEL}`}
+      title={REMOVE_LABEL}
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
+    >
+      <span aria-hidden="true">✕</span>
+    </button>
+  );
 
   return (
     <section aria-label="올린 문서" className="flex w-full flex-col items-center gap-3">
@@ -58,18 +81,22 @@ export default function UploadPanel({ docs, reading, sending, showHints, onSumma
                 >
                   {SUMMARIZE_LABEL}
                 </button>
+                {removeButton(doc)}
               </li>
             ) : (
               <li
                 key={doc.id}
-                className="flex max-w-full flex-col rounded-2xl bg-red-50 px-3 py-1 text-sm dark:bg-red-950"
+                className="flex max-w-full items-center gap-2 rounded-2xl bg-red-50 py-1 pl-3 pr-1 text-sm dark:bg-red-950"
               >
-                <span className="truncate">
-                  <span aria-hidden="true">❌ </span>
-                  <span className="sr-only">실패: </span>
-                  {doc.name}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">
+                    <span aria-hidden="true">❌ </span>
+                    <span className="sr-only">실패: </span>
+                    {doc.name}
+                  </span>
+                  <span className="text-xs text-red-700 dark:text-red-300">{doc.reason}</span>
                 </span>
-                <span className="text-xs text-red-700 dark:text-red-300">{doc.reason}</span>
+                {removeButton(doc)}
               </li>
             ),
           )}

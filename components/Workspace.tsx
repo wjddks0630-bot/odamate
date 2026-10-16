@@ -116,6 +116,12 @@ export default function Workspace() {
     setReading(false);
   }
 
+  // 올린 문서를 목록에서 뺀다. 이후 질문·요약·공유에는 남은 문서만 쓰인다.
+  function handleRemove(id: string) {
+    docsRef.current = docsRef.current.filter((doc) => doc.id !== id);
+    setDocs(docsRef.current);
+  }
+
   // 올린 문서를 공유 파일로 내려받는다. 내용이 글자 그대로 들어가므로 먼저 한 번 확인한다.
   function handleExport() {
     const okDocs = docsRef.current.filter((doc): doc is OkDoc => doc.status === "ok");
@@ -204,6 +210,7 @@ export default function Workspace() {
           sending={sending}
           showHints={!started}
           onSummarize={(doc) => handleSend(summaryRequest(doc.name), doc.name)}
+          onRemove={handleRemove}
           onExport={handleExport}
           onImport={() => importInputRef.current?.click()}
         />

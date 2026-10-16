@@ -18,6 +18,7 @@ export const COPY_LABEL = "복사";
 export const COPIED_LABEL = "복사됨";
 export const COPY_FAILED_LABEL = "복사 안 됨";
 export const SUMMARIZE_LABEL = "요약";
+export const REMOVE_LABEL = "빼기";
 export const ASK_LABEL = "질문하기";
 export const PICK_LABEL = "파일 선택";
 export const DROP_HINT = "여기에 놓으면 올라갑니다";
