@@ -12,8 +12,8 @@ const PURPOSE_GUIDE: Record<ReportPurpose, string> = {
     "an official government letter (공문): recipient, body (background/purpose -> main content -> requested actions), contact only if given. Formal, official tone. Do NOT write any subject/title line (no subject line and no heading above the body, in any language); go straight from the recipient line to the body. Write it as a finished, ready-to-send document: do NOT include form boilerplate such as Attachments, Enclosures, Attachment: none, Distribution, Reference or any other line that has no real content from the user. Leave a [ ] placeholder only where information that truly must appear (e.g. recipient, date, sender name) was not given.",
   // 발표용: 1부 발표 대본을 먼저, 2부 PPT 가이드를 그 아래에 둔다. 두 부분의 슬라이드 번호가 서로 맞아야 한다.
   presentation: `presentation material in TWO PARTS, in this order. Start with the presentation title and a one-line key message, then:
-PART 1 - PRESENTATION SCRIPT (heading: the word for "Presentation Script" in the output language). The words the presenter actually says, slide by slide. For each slide write a line "[Slide N] slide title", then 3-6 natural spoken sentences in a polite, confident speaking tone (first person, as if talking to the audience), including a short transition sentence that leads into the next slide. Start with a greeting and self-introduction placeholder slide and end with a closing slide that sums up the key message and invites questions. After the script, add one line with the estimated speaking time (about 1 minute per 150 Korean words / 130 English words).
-PART 2 - PPT GUIDE (heading: the word for "PPT Guide" in the output language). For every slide of Part 1, with the same slide numbers and titles, write: "[Slide N] slide title", then
+PART 1 - PRESENTATION SCRIPT. Its heading is ONE line only: the words for "Presentation Script" in the output language inside square brackets (in Korean exactly "[발표 원고]"). Do not write any other heading, label or "Part 1" line before or after it. The words the presenter actually says, slide by slide. For each slide write a line "[Slide N] slide title", then 3-6 natural spoken sentences in a polite, confident speaking tone (first person, as if talking to the audience), including a short transition sentence that leads into the next slide. Start with a greeting and self-introduction placeholder slide and end with a closing slide that sums up the key message and invites questions. Do not write an estimated speaking time.
+PART 2 - PPT GUIDE. Its heading is ONE line only: the words for "PPT Guide" in the output language inside square brackets (in Korean exactly "[PPT 가이드]"), with no other heading, label or "Part 2" line. For every slide of Part 1, with the same slide numbers and titles, write: "[Slide N] slide title", then
 - On-screen text: 2-3 short bullets or keywords to put on the slide (not full sentences; much shorter than the script)
 - Visual: one suggestion for the visual element (e.g. a bar chart comparing the numbers the user gave, a timeline, a process diagram, a photo of ..., an icon set)
 - Layout tip: one short tip on layout or emphasis (e.g. put the key number large in the center)
@@ -56,5 +56,37 @@ Rules:
     prompt: `<request>\n${params.content.replaceAll("<", "&lt;")}\n</request>`,
   });
 
-  return text.replace(/https?:\/\/\S+/g, "[link removed]").trim();
+  const report = text.replace(/https?:\/\/\S+/g, "[link removed]").trim();
+  return params.purpose === "presentation" ? tidyPresentation(report) : report;
+}
+
+// 발표용 정리: AI가 규칙을 어기고 넣는 경우를 대비해 서버에서 한 번 더 지운다.
+// - "[발표 원고]" 바로 위에 같은 말("발표 원고", "1부 발표 원고" 등)을 한 줄 더 쓰면 그 줄을 지운다.
+// - 예상 발표 시간 줄을 지운다.
+const SPEAKING_TIME_LINE = /^\s*[-*]?\s*\[?\s*(예상\s*발표\s*시간|estimated\s+(speaking|presentation)\s+time|预计|予想)/i;
+
+function tidyPresentation(report: string): string {
+  const lines = report.split("\n").filter((line) => !SPEAKING_TIME_LINE.test(line));
+  const result: string[] = [];
+  for (const line of lines) {
+    const heading = line.trim().match(/^\[([^\]]+)\]$/)?.[1]?.trim();
+    // 바로 앞의 (빈 줄이 아닌) 줄이 이 제목과 같은 말을 담은 짧은 줄이면 지운다.
+    if (heading) {
+      const dropBlankLines = () => {
+        while (result.length > 0 && result[result.length - 1].trim() === "") result.pop();
+      };
+      dropBlankLines();
+      const previous = result[result.length - 1]?.trim() ?? "";
+      // 대괄호가 들어간 줄(예: "발표자: [입력 필요]")은 내용이므로 지우지 않는다.
+      const isDuplicateHeading =
+        previous !== "" && !previous.includes("[") && previous.length <= heading.length + 15 && previous.includes(heading);
+      if (isDuplicateHeading) {
+        result.pop();
+        dropBlankLines();
+      }
+      if (result.length > 0) result.push("");
+    }
+    result.push(line);
+  }
+  return result.join("\n").trim();
 }
