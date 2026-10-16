@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ODAmate
 
-## Getting Started
+> 당신을 위한 개발협력 업무 파트너
 
-First, run the development server:
+ODAmate는 개발협력(ODA) 분야에서 일하는 인턴이 문서를 빠르게 이해하고 보고서를 쉽게 쓰도록 돕는 웹 앱입니다.
+참고 문서(PDF, Word, 한글)를 올리고 채팅으로 질문하면, AI가 문서 내용을 근거로 답하고 출처를 함께 보여 줍니다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 주요 기능
+
+| 기능 | 설명 |
+|---|---|
+| 문서 업로드 | PDF(.pdf), Word(.docx), 한글(.hwpx) 파일을 올리거나 끌어다 놓기. 파일 1개 10MB·50쪽 이하, 최대 5개 |
+| 문서 기반 질의응답 | 올린 문서를 우선 근거로 답하고, 부족한 부분은 AI의 일반 지식으로 보충. 답변 아래에 근거 문서 이름과 보충 여부 표시 |
+| 일반 질문 | 문서 없이도 무엇이든 질문 가능 ("일반 답변"으로 표시). 이어지는 질문도 앞 대화를 이해 |
+| 문서 요약 | 올린 문서마다 '요약' 버튼으로 문서 내용만으로 요약 |
+| 문서 묶음 공유 | 올린 문서를 파일(.json)로 내보내고 다른 사람이 가져오기 (서버에 저장하지 않음) |
+| 보고서 작성 도우미 | 공문·발표용·업무 보고서·회의록·보도자료 초안을 한국어·영어·중국어·일본어로 작성하고 Word(.docx)·텍스트(.txt)로 저장. 발표용은 발표 원고와 PPT 가이드를 함께 만듦 |
+| 협력국 세계지도 | ODA 협력국과 중점협력국을 지도에 표시하고, 나라별 소개와 지원 사업 안내 |
+| EDCF 단계별 체크리스트 | 대외경제협력기금(EDCF) 사업 6단계별 업무·제출자료 체크 (이 브라우저에만 저장) |
+| 접속 비밀번호 | 비밀번호 하나로 입장 (회원가입 없음) |
+
+## 개인정보·보안
+
+- 올린 문서는 **서버에 저장하지 않습니다.** 브라우저 화면에만 있고, 새로고침하면 사라집니다.
+- 질문할 때 문서 글자는 답변을 만들기 위해 OpenAI API로 전송됩니다. **대외비·개인정보가 담긴 문서는 올리지 마세요.**
+- API 키와 접속 비밀번호는 서버 환경 변수에만 두며, 브라우저나 저장소에 포함되지 않습니다.
+- AI 답변, 특히 일반 지식으로 보충한 내용은 틀릴 수 있으니 사실 여부를 꼭 확인하세요.
+
+## 기술 스택
+
+- [Next.js](https://nextjs.org) 16 (App Router), React 19, TypeScript
+- Tailwind CSS 4
+- [Vercel AI SDK](https://ai-sdk.dev) + OpenAI `gpt-4.1-mini`
+- 문서 글자 추출 (모두 브라우저에서 처리): `unpdf`(PDF), `mammoth`(Word), `jszip`(한글 .hwpx)
+- 세계지도: `d3-geo`, `topojson-client`, `world-atlas`
+- 배포: [Vercel](https://vercel.com)
+
+## 직접 실행하기
+
+1. 저장소를 내려받고 패키지를 설치합니다.
+
+   ```bash
+   npm install
+   ```
+
+2. 프로젝트 폴더에 `.env` 파일을 만들고 아래 두 값을 넣습니다. (`.env`는 `.gitignore`에 등록되어 있어 저장소에 올라가지 않습니다.)
+
+   ```
+   OPENAI_API_KEY=여기에_OpenAI_API_키
+   ACCESS_PASSWORD=여기에_접속_비밀번호
+   ```
+
+3. 개발 서버를 실행하고 http://localhost:3000 에 접속합니다.
+
+   ```bash
+   npm run dev
+   ```
+
+| 명령어 | 설명 |
+|---|---|
+| `npm run dev` | 개발 서버 실행 |
+| `npm run build` | 배포용 빌드 |
+| `npm run start` | 빌드한 앱 실행 |
+| `npm run lint` | 코드 검사 (ESLint) |
+
+## 폴더 구조
+
+```
+app/            화면(page.tsx)과 서버 API (api/chat, api/report, api/login, api/session)
+components/     화면 부품 (질문창, 대화창, 업로드 목록, 보고서 도우미, 지도 등)
+lib/            AI 호출, 문서 글자 추출, 업로드 검사, 안내 문구·제한값
+public/         로고·지도 등 정적 파일
+practice/       답변 정답률 점검용 질문 세트와 스크립트
+PRD.md          기획서 / PLAN.md 개발 계획 / DESIGN.md 설계 / CHECK.md 점검 결과
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 만든 사람
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+김정안 (개발사업협력과 인턴 실습 프로젝트)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+※ 이 앱은 실습용 프로젝트이며, 정부 기관의 공식 서비스가 아닙니다.
